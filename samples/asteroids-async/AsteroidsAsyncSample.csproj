@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <StartupObject>Panda3D.AsteroidsAsync.AsteroidsGame</StartupObject>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Panda3D.Interop" Version="1.11.0-preview.*" />
+    <PackageReference Include="Panda3D.Runtime.linux-x64" Version="1.11.0-preview.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="asteroids/models/**" CopyToOutputDirectory="PreserveNewest" LinkBase="asteroids/models" />
+    <Content Include="asteroids/textures/**" CopyToOutputDirectory="PreserveNewest" LinkBase="asteroids/textures" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Panda3D.Async\Panda3D.Async.csproj" />
+  </ItemGroup>
+
+  <!-- When project-referencing Panda3D.Interop, pull in the Panda3D.targets
+       that copies the native .so files to the output directory. -->
+  <Import Project="../../../panda3d/csharp/Panda3D.targets"
+          Condition="Exists('../../../panda3d/csharp/Panda3D.targets')" />
+</Project>

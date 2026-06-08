@@ -1,0 +1,9 @@
+{
+  "yearSeconds": 30.0,
+  "planets": [
+    { "name": "MERCURY", "tex": "mercury", "orbit": 0.6,  "size": 0.30, "yearMul": 0.241, "dayMul": 1.5,  "tilt":  0.0 },
+    { "name": "VENUS",   "tex": "venus",   "orbit": 0.85, "size": 0.55, "yearMul": 0.615, "dayMul": 0.8,  "tilt":  3.0 },
+    { "name": "EARTH",   "tex": "earth",   "orbit": 1.10, "size": 0.60, "yearMul": 1.000, "dayMul": 4.0,  "tilt": 23.5 },
+    { "name": "MARS",    "tex": "mars",    "orbit": 1.45, "size": 0.40, "yearMul": 1.881, "dayMul": 3.8,  "tilt": 25.0 }
+  ]
+}

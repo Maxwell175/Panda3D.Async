@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <StartupObject>Panda3D.AsyncShowcase.MissionControl</StartupObject>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Panda3D.Interop" Version="1.11.0-preview.4096" />
+    <PackageReference Include="Panda3D.Runtime.linux-x64" Version="1.11.0-preview.4096" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="assets/models/**"   CopyToOutputDirectory="PreserveNewest" LinkBase="assets/models" />
+    <Content Include="assets/textures/**" CopyToOutputDirectory="PreserveNewest" LinkBase="assets/textures" />
+    <Content Include="data/**"            CopyToOutputDirectory="PreserveNewest" LinkBase="data" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Panda3D.Async\Panda3D.Async.csproj" />
+  </ItemGroup>
+
+  <Import Project="../../../panda3d/csharp/Panda3D.targets"
+          Condition="Exists('../../../panda3d/csharp/Panda3D.targets')" />
+</Project>

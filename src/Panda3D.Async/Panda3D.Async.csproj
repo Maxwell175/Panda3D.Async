@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Panda3D.Async</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <PackageId>Panda3D.Async</PackageId>
+    <Version>1.11.0</Version>
+    <Authors>Panda3D</Authors>
+    <Description>
+      Zero-allocation async/await integration for the Panda3D C# bindings.
+      Provides PandaTask, chain-aware continuations, and interop helpers 
+      for mixing Panda3D task chains with System.Threading.Tasks.Task and 
+      arbitrary external threads.
+    </Description>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/panda3d/panda3d</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>panda3d;async;await;coroutine;tasks;game-engine</PackageTags>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Panda3D.Interop" Version="1.11.0-preview.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\" Condition="Exists('../../README.md')" />
+  </ItemGroup>
+</Project>
