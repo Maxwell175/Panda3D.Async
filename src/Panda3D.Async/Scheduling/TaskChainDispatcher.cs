@@ -127,7 +127,7 @@ internal sealed class TaskChainDispatcher : SynchronizationContext, IManagedCall
         lock (_nextFrameLock) { hasNextFrame = _nextFramePending.Count > 0; }
 
         if (hasNextFrame || !_inbox.IsEmpty) {
-            return (int)AsyncTask_DoneStatus.DS_cont;
+            return (int)AsyncTaskDoneStatus.DsCont;
         }
 
         Interlocked.Exchange(ref _drainScheduled, 0);
@@ -138,7 +138,7 @@ internal sealed class TaskChainDispatcher : SynchronizationContext, IManagedCall
             ScheduleDrainIfNeeded();
         }
 
-        return (int)AsyncTask_DoneStatus.DS_done;
+        return (int)AsyncTaskDoneStatus.DsDone;
     }
 
     /// <summary>

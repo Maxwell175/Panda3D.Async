@@ -39,11 +39,11 @@ internal static unsafe class ManagedTrampolines {
                     SynchronizationContext.SetSynchronizationContext(prev);
                 }
             }
-            return (int)Panda3D.Core.AsyncTask_DoneStatus.DS_done;
+            return (int)Panda3D.Core.AsyncTaskDoneStatus.DsDone;
         }
         catch (Exception ex) {
             PandaTaskScheduler.PublishUnobservedException(ex);
-            return (int)Panda3D.Core.AsyncTask_DoneStatus.DS_done;
+            return (int)Panda3D.Core.AsyncTaskDoneStatus.DsDone;
         }
     }
 
@@ -66,7 +66,7 @@ internal static unsafe class ManagedTrampolines {
 /// Managed side of a <c>ManagedAsyncTask</c> callback.  The C++ task
 /// holds a <see cref="GCHandle"/> to an implementation; <see cref="Run"/>
 /// is invoked every epoch and must return a
-/// <see cref="Panda3D.Core.AsyncTask_DoneStatus"/> value cast to int.
+/// <see cref="Panda3D.Core.AsyncTaskDoneStatus"/> value cast to int.
 /// </summary>
 internal interface IManagedCallback : IDisposable {
     /// <summary>Run once per chain epoch; return DoneStatus as int.</summary>

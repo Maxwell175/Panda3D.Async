@@ -92,7 +92,7 @@ internal sealed class FutureWaiterCallback :
         if (System.Threading.Interlocked.Exchange(ref _fired, 1) == 0) {
             Dispatch();
         }
-        return (int)AsyncTask_DoneStatus.DS_done;
+        return (int)AsyncTaskDoneStatus.DsDone;
     }
 
     void Dispatch() {

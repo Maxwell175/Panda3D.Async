@@ -6,6 +6,10 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
 
+    <!-- Trim/AOT-ready: mark the assembly trimmable and keep the analyzers on so trim-unsafe patterns
+         fail here rather than in a consumer's published app. -->
+    <IsAotCompatible>true</IsAotCompatible>
+
     <PackageId>Panda3D.Async</PackageId>
     <Version>1.11.0</Version>
     <Authors>Panda3D</Authors>

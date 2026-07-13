@@ -64,9 +64,30 @@ public readonly partial struct PandaTask {
     /// has finished (with or without cancellation).  Cancelling the
     /// outer PandaTask cancels every pending inner future.
     /// </summary>
+    /// <remarks>
+    /// This is <c>AsyncFuture::gather()</c> -- the engine's own "all of these"
+    /// future, which wires itself up as a waiter on each child and, when cancelled,
+    /// cancels the children still pending.  It used to be reimplemented here (a
+    /// GCHandle and a ManagedAsyncTask per future, plus a hand-rolled pending
+    /// counter with its own completion race) because <c>gather_csharp</c> took a
+    /// <c>T **, int</c> array, which interrogate has no marshalling for -- so the
+    /// binding was silently dropped and nobody noticed it was missing.  It now
+    /// takes a container, and this is one waiter on one future.
+    /// </remarks>
     public static PandaTask WhenAll(params IAsyncFuture[] futures) {
         if (futures is null) throw new ArgumentNullException(nameof(futures));
-        var source = WhenAllFuturesSource.Rent(futures);
+
+        var gathered = new Futures();
+        foreach (var future in futures) {
+            if (future is not null) {
+                gathered.Add(future);
+            }
+        }
+        if (gathered.Count == 0) {
+            return CompletedTask;
+        }
+
+        var source = WhenAllFuturesSource.Rent(AsyncFuture.GatherCsharp(gathered));
         return new PandaTask(source, source.Version);
     }
 
@@ -189,7 +210,7 @@ internal sealed class DelaySource :
 
     int IManagedCallback.Run() {
         _core.TrySetResult(default);
-        return (int)AsyncTask_DoneStatus.DS_done;
+        return (int)AsyncTaskDoneStatus.DsDone;
     }
 
     void IDisposable.Dispose() => TaskPool<DelaySource>.TryPush(this);
@@ -248,10 +269,9 @@ internal sealed class SwitchChainSource :
 }
 
 /// <summary>
-/// Waits for all provided <see cref="IAsyncFuture"/>s to complete.
-/// Uses <c>AsyncFuture.AddWaitingTaskCsharp</c> per future with a
-/// shared <see cref="IManagedCallback"/> that decrements a pending
-/// count and completes the source when the last one fires.
+/// Waits for a single <see cref="IAsyncFuture"/> -- the gathering future returned by
+/// <c>AsyncFuture.GatherCsharp</c> -- to complete, via one
+/// <c>AddWaitingTaskCsharp</c> waiter.
 /// </summary>
 internal sealed class WhenAllFuturesSource :
     IPandaTaskSource,
@@ -259,44 +279,32 @@ internal sealed class WhenAllFuturesSource :
     ITaskPoolNode<WhenAllFuturesSource> {
 
     PandaTaskCompletionSourceCore<byte> _core;
-    int _pending;
-    IAsyncFuture[]? _futures;
+    IAsyncFuture? _future;
     public WhenAllFuturesSource? NextNode { get; set; }
 
     WhenAllFuturesSource() {}
 
-    public static WhenAllFuturesSource Rent(IAsyncFuture[] futures) {
+    public static WhenAllFuturesSource Rent(IAsyncFuture gathered) {
         if (!TaskPool<WhenAllFuturesSource>.TryPop(out var s) || s is null) {
             s = new WhenAllFuturesSource();
         }
         s._core.Reset();
-        s._futures = futures;
-        s._pending = futures.Length;
+        s._future = gathered;
 
-        if (futures.Length == 0) {
+        if (gathered.Done()) {
             s._core.TrySetResult(default);
             return s;
         }
 
-        foreach (var fut in futures) {
-            if (fut.Done()) {
-                if (Interlocked.Decrement(ref s._pending) == 0) {
-                    s._core.TrySetResult(default);
-                }
-                continue;
-            }
-            var handle = GCHandle.Alloc(s);
-            var task = ManagedAsyncTask.Make(
-                "Panda3D.Async.WhenAll",
-                ManagedTrampolines.RunFnPtr,
-                ManagedTrampolines.FreeFnPtr,
-                (ulong)(nint)GCHandle.ToIntPtr(handle));
-            if (!fut.AddWaitingTaskCsharp(task)) {
-                // Raced with future completing — decrement inline.
-                if (Interlocked.Decrement(ref s._pending) == 0) {
-                    s._core.TrySetResult(default);
-                }
-            }
+        var handle = GCHandle.Alloc(s);
+        var task = ManagedAsyncTask.Make(
+            "Panda3D.Async.WhenAll",
+            ManagedTrampolines.RunFnPtr,
+            ManagedTrampolines.FreeFnPtr,
+            (ulong)(nint)GCHandle.ToIntPtr(handle));
+        if (!gathered.AddWaitingTaskCsharp(task)) {
+            // Raced with the gathering future completing.
+            s._core.TrySetResult(default);
         }
         return s;
     }
@@ -304,10 +312,8 @@ internal sealed class WhenAllFuturesSource :
     public short Version => _core.Version;
 
     int IManagedCallback.Run() {
-        if (Interlocked.Decrement(ref _pending) == 0) {
-            _core.TrySetResult(default);
-        }
-        return (int)AsyncTask_DoneStatus.DS_done;
+        _core.TrySetResult(default);
+        return (int)AsyncTaskDoneStatus.DsDone;
     }
 
     void IDisposable.Dispose() {
