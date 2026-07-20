@@ -1,0 +1,41 @@
+<Project>
+
+  <!--
+    Preview versioning, panda3d-style. The package version is
+    <VersionPrefix>-preview.<N>, where N is this repo's commit count (git rev-list count).
+
+    Applied on every build (local and CI) so Panda3D.Async is always a preview package,
+    never an accidental stable 1.11.0, and computed from Async's own commit count. That
+    last part matters: the Panda3D.Framework solution consumes this project as a sibling
+    ProjectReference. When it packs, NuGet asks this project for its version via the
+    _GetProjectVersion target (which reads $(PackageVersion) after $(GetPackageVersionDependsOn)),
+    so hooking there stamps the framework's baked dependency with Async's count — the same
+    version Async's own CI publishes — rather than the framework's.
+
+    Escape hatch: -p:PandaPreviewVersioning=false (optionally with -p:Version=X) stamps a
+    version by hand. CI needs full history (fetch-depth: 0) for the count to be accurate.
+  -->
+  <PropertyGroup Condition="'$(PackageId)' == 'Panda3D.Async'">
+    <GetPackageVersionDependsOn>$(GetPackageVersionDependsOn);_PandaPreviewVersion</GetPackageVersionDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_PandaPreviewVersion"
+          BeforeTargets="GetAssemblyVersion;GenerateNuspec"
+          Condition="'$(PandaPreviewVersioning)' != 'false' and '$(PackageId)' == 'Panda3D.Async' and '$(_PandaVersionStamped)' != 'true'">
+    <Exec Command="git rev-list --count HEAD"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ConsoleToMSBuild="true"
+          IgnoreExitCode="true"
+          StandardOutputImportance="Low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_PandaCommitCount" />
+      <Output TaskParameter="ExitCode" PropertyName="_PandaGitExit" />
+    </Exec>
+    <PropertyGroup Condition="'$(_PandaGitExit)' == '0' and '$(_PandaCommitCount)' != ''">
+      <Version>$(VersionPrefix)-preview.$(_PandaCommitCount)</Version>
+      <PackageVersion>$(Version)</PackageVersion>
+      <InformationalVersion>$(Version)</InformationalVersion>
+      <_PandaVersionStamped>true</_PandaVersionStamped>
+    </PropertyGroup>
+  </Target>
+
+</Project>

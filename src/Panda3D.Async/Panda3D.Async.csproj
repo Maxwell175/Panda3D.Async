@@ -11,7 +11,8 @@
     <IsAotCompatible>true</IsAotCompatible>
 
     <PackageId>Panda3D.Async</PackageId>
-    <Version>1.11.0</Version>
+    <!-- Base version. Directory.Build.targets stamps the -preview.<commit count> suffix. -->
+    <VersionPrefix>1.11.0</VersionPrefix>
     <Authors>Panda3D</Authors>
     <Description>
       Zero-allocation async/await integration for the Panda3D C# bindings.

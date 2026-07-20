@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# Builds and packs the Panda3D.Async library, then uploads the .nupkg as a build
+# artifact. There is no publish step — the package is published by hand from the
+# downloaded artifact.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so the preview commit count is accurate
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # The committed nuget.config lists a local dev folder source that doesn't exist
+      # on the runner; restore straight from nuget.org (the only real dependency,
+      # Panda3D.Interop, lives there) so the missing local source can't fail restore.
+      - name: Restore
+        run: dotnet restore src/Panda3D.Async/Panda3D.Async.csproj --source https://api.nuget.org/v3/index.json
+
+      - name: Build
+        run: dotnet build src/Panda3D.Async/Panda3D.Async.csproj -c Release --no-restore
+
+      - name: Pack
+        run: dotnet pack src/Panda3D.Async/Panda3D.Async.csproj -c Release --no-build -o artifacts
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Panda3D.Async-nupkg
+          path: artifacts/*.nupkg
